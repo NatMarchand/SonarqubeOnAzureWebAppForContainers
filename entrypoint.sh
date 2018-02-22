@@ -1,6 +1,7 @@
-#!/bin/ash
+#!/bin/sh
 
-export SONARQUBE_JDBC_URL=$SQLAZURECONNSTR_SONARQUBE_JDBC_URL 
+echo Preparing SonarQube container
+
 mkdir -p /home/sonarqube/data
 chown -R sonarqube:sonarqube /home/sonarqube
 
@@ -22,4 +23,20 @@ ln -s /home/sonarqube/conf /opt/sonarqube/conf
 ln -s /home/sonarqube/logs /opt/sonarqube/logs
 ln -s /home/sonarqube/extensions /opt/sonarqube/extensions
 
-exec $SONARQUBE_HOME/bin/run.sh -Dsonar.path.data="/home/sonarqube/data"
+chown -R sonarqube:sonarqube $SONARQUBE_HOME
+
+set -e
+
+if [ "${1:0:1}" != '-' ]; then
+  exec "$@"
+fi
+
+echo Launching SonarQube instance
+
+exec su-exec sonarqube \
+  java -jar lib/sonar-application-$SONAR_VERSION.jar \
+  -Dsonar.log.console=true \
+  -Dsonar.jdbc.url="$SQLAZURECONNSTR_SONARQUBE_JDBC_URL" \
+  -Dsonar.web.javaAdditionalOpts="$SONARQUBE_WEB_JVM_OPTS -Djava.security.egd=file:/dev/./urandom" \
+  -Dsonar.path.data="/home/sonarqube/data" \
+  "$@"
