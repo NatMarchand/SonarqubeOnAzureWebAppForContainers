@@ -1,3 +1,4 @@
 FROM sonarqube:7.7-community
-COPY entrypoint.sh ./bin/
-ENTRYPOINT ["./bin/entrypoint.sh"]
+COPY bootstrap.sh ./bin/
+RUN chmod +x ./bin/bootstrap.sh
+ENTRYPOINT ["./bin/bootstrap.sh"]
